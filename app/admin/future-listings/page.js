@@ -62,6 +62,95 @@ export default function FutureListingsPage() {
     setTimeout(() => setToast({ show: false, message: '', type: 'success' }), 3000);
   };
 
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkCategoryModalOpen, setIsBulkCategoryModalOpen] = useState(false);
+  const [bulkCategory, setBulkCategory] = useState('Percussion');
+
+  const toggleSelectProduct = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const activeFilteredIds = filteredProducts.map(p => p.id);
+    const allSelected = activeFilteredIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !activeFilteredIds.includes(id)));
+    } else {
+      setSelectedIds(prev => {
+        const union = new Set([...prev, ...activeFilteredIds]);
+        return Array.from(union);
+      });
+    }
+  };
+
+  const bulkDelete = async () => {
+    if (!selectedIds.length) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} selected drafts?`)) return;
+    
+    const { error } = await supabase
+      .from('future_listings')
+      .delete()
+      .in('id', selectedIds);
+      
+    if (error) {
+      showToast('Error deleting drafts: ' + error.message, 'error');
+    } else {
+      showToast(`Successfully deleted ${selectedIds.length} drafts`);
+      setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
+      setSelectedIds([]);
+    }
+  };
+
+  const bulkCategorize = async () => {
+    if (!selectedIds.length) return;
+    const { error } = await supabase
+      .from('future_listings')
+      .update({ category: bulkCategory })
+      .in('id', selectedIds);
+      
+    if (error) {
+      showToast('Error categorizing drafts: ' + error.message, 'error');
+    } else {
+      showToast(`Successfully updated category for ${selectedIds.length} drafts`);
+      setProducts(prev => prev.map(p => selectedIds.includes(p.id) ? { ...p, category: bulkCategory } : p));
+      setSelectedIds([]);
+      setIsBulkCategoryModalOpen(false);
+    }
+  };
+
+  const bulkPublish = async () => {
+    if (!selectedIds.length) return;
+    if (!confirm(`Are you sure you want to publish all ${selectedIds.length} selected drafts to the live store?`)) return;
+    
+    const selectedListings = products.filter(p => selectedIds.includes(p.id));
+    if (!selectedListings.length) return;
+    
+    const itemsToInsert = selectedListings.map(({ id, created_at, ...productData }) => productData);
+    
+    const { error: insertError } = await supabase
+      .from('products')
+      .insert(itemsToInsert);
+      
+    if (insertError) {
+      return showToast('Failed to publish drafts: ' + insertError.message, 'error');
+    }
+    
+    const { error: deleteError } = await supabase
+      .from('future_listings')
+      .delete()
+      .in('id', selectedIds);
+      
+    if (deleteError) {
+      showToast('Published drafts, but failed to clean drafts list', 'error');
+    } else {
+      showToast(`Successfully published ${selectedIds.length} drafts to live store!`);
+      setProducts(prev => prev.filter(p => !selectedIds.includes(p.id)));
+      setSelectedIds([]);
+    }
+  };
+
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -317,42 +406,54 @@ export default function FutureListingsPage() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map(p => {
+            const isSelected = selectedIds.includes(p.id);
             return (
-            <div key={p.id} onClick={() => openEditModal(p)} className="bg-[#160F0F] rounded-2xl border border-[#2C1E1E] overflow-hidden group cursor-pointer hover:border-[#3D2828] transition flex flex-col shadow-lg hover:shadow-xl hover:shadow-[#D4AF37]/5">
-              <div className="aspect-[4/3] bg-[#1C1212] relative overflow-hidden">
-                {p.media && p.media.length > 0 && p.media[0].type === 'image' ? (
-                  <img src={p.media[0].url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                ) : (p.image_url || p.images?.[0]) ? (
-                  <img src={p.image_url || p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                ) : (
-                  <Package className="w-10 h-10 text-[#3D2828]" />
-                )}
-                {p.images && p.images.length > 1 && (
-                  <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-mono text-white">
-                    +{p.images.length - 1} imgs
-                  </div>
-                )}
-                <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{p.category}</div>
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3 backdrop-blur-[2px]">
-                  <button onClick={(e) => { e.stopPropagation(); publishDraft(p); }} className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 text-xs font-bold rounded-lg transition">PUBLISH</button>
-                  <button onClick={(e) => { e.stopPropagation(); openEditModal(p); }} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={(e) => { e.stopPropagation(); confirmDelete(p); }} className="p-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
-                </div>
+            <div key={p.id} className="relative group">
+              {/* Checkbox Overlay */}
+              <div className="absolute top-3.5 left-3.5 z-20" onClick={(e) => e.stopPropagation()}>
+                <input 
+                  type="checkbox" 
+                  checked={isSelected}
+                  onChange={() => toggleSelectProduct(p.id)}
+                  className="w-4 h-4 rounded border-[#2C1E1E] text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-opacity-20 cursor-pointer accent-[#D4AF37]"
+                />
               </div>
-              <div className="p-5">
-                <h3 className="font-semibold text-white text-base leading-tight line-clamp-1" title={p.name}>{p.name}</h3>
-                <div className="flex items-end justify-between mt-4">
-                  <div>
-                    <p className="text-xs text-[#A09393] uppercase tracking-wider mb-0.5 font-medium">Standard</p>
-                    <p className="font-mono text-lg text-white font-semibold">₹{p.price?.toLocaleString()}</p>
+              <div onClick={() => openEditModal(p)} className={`bg-[#160F0F] rounded-2xl border overflow-hidden group cursor-pointer hover:border-[#3D2828] transition flex flex-col shadow-lg hover:shadow-xl hover:shadow-[#D4AF37]/5 ${isSelected ? 'border-[#D4AF37]/80 ring-1 ring-[#D4AF37]/30' : 'border-[#2C1E1E]'}`}>
+                <div className="aspect-[4/3] bg-[#1C1212] relative overflow-hidden">
+                  {p.media && p.media.length > 0 && p.media[0].type === 'image' ? (
+                    <img src={p.media[0].url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  ) : (p.image_url || p.images?.[0]) ? (
+                    <img src={p.image_url || p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  ) : (
+                    <Package className="w-10 h-10 text-[#3D2828]" />
+                  )}
+                  {p.images && p.images.length > 1 && (
+                    <div className="absolute top-3 right-3 bg-black/60 backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md text-[10px] font-mono text-white">
+                      +{p.images.length - 1} imgs
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-10 bg-black/60 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider text-[#D4AF37]">{p.category}</div>
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                    <button onClick={(e) => { e.stopPropagation(); publishDraft(p); }} className="px-3 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 text-emerald-300 text-xs font-bold rounded-lg transition">PUBLISH</button>
+                    <button onClick={(e) => { e.stopPropagation(); openEditModal(p); }} className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(p); }} className="p-2 bg-rose-500/20 hover:bg-rose-500/40 text-rose-300 rounded-lg transition"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
-                {p.variants && p.variants.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-[#2C1E1E] text-[10px] text-[#A09393] uppercase tracking-wider">{p.variants.length} variant{p.variants.length > 1 ? 's' : ''}</div>
-                )}
-                {p.addons && p.addons.length > 0 && (
-                  <div className="mt-1 text-[10px] text-[#A09393] uppercase tracking-wider">{p.addons.length} add-on{p.addons.length > 1 ? 's' : ''}</div>
-                )}
+                <div className="p-5">
+                  <h3 className="font-semibold text-white text-base leading-tight line-clamp-1" title={p.name}>{p.name}</h3>
+                  <div className="flex items-end justify-between mt-4">
+                    <div>
+                      <p className="text-xs text-[#A09393] uppercase tracking-wider mb-0.5 font-medium">Standard</p>
+                      <p className="font-mono text-lg text-white font-semibold">₹{p.price?.toLocaleString()}</p>
+                    </div>
+                  </div>
+                  {p.variants && p.variants.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-[#2C1E1E] text-[10px] text-[#A09393] uppercase tracking-wider">{p.variants.length} variant{p.variants.length > 1 ? 's' : ''}</div>
+                  )}
+                  {p.addons && p.addons.length > 0 && (
+                    <div className="mt-1 text-[10px] text-[#A09393] uppercase tracking-wider">{p.addons.length} add-on{p.addons.length > 1 ? 's' : ''}</div>
+                  )}
+                </div>
               </div>
             </div>
           );})}
@@ -363,13 +464,31 @@ export default function FutureListingsPage() {
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="bg-[#1C1212] text-[#A09393] text-xs font-semibold tracking-wider border-b border-[#2C1E1E]">
-                  <th className="p-4 pl-6">Product</th><th className="p-4">Category</th><th className="p-4">Price</th><th className="p-4">Status</th><th className="p-4 pr-6 text-right">Actions</th>
+                  <th className="p-4 pl-6 w-12">
+                    <input 
+                      type="checkbox" 
+                      checked={filteredProducts.length > 0 && filteredProducts.every(p => selectedIds.includes(p.id))}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 rounded border-[#2C1E1E] text-[#D4AF37] focus:ring-[#D4AF37] cursor-pointer accent-[#D4AF37]"
+                    />
+                  </th>
+                  <th className="p-4">Product</th><th className="p-4">Category</th><th className="p-4">Price</th><th className="p-4">Status</th><th className="p-4 pr-6 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2C1E1E] text-[#E0D8D8]">
-                {filteredProducts.map((p) => (
-                  <tr key={p.id} className="hover:bg-[#1C1212] transition-colors group">
-                    <td className="p-4 pl-6 flex items-center gap-4">
+                {filteredProducts.map((p) => {
+                  const isSelected = selectedIds.includes(p.id);
+                  return (
+                  <tr key={p.id} className={`hover:bg-[#1C1212] transition-colors group ${isSelected ? 'bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10' : ''}`}>
+                    <td className="p-4 pl-6 w-12" onClick={(e) => e.stopPropagation()}>
+                      <input 
+                        type="checkbox" 
+                        checked={isSelected}
+                        onChange={() => toggleSelectProduct(p.id)}
+                        className="w-4 h-4 rounded border-[#2C1E1E] text-[#D4AF37] focus:ring-[#D4AF37] cursor-pointer accent-[#D4AF37]"
+                      />
+                    </td>
+                    <td className="p-4 flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-[#221616] border border-[#2C1E1E] flex items-center justify-center overflow-hidden shrink-0">
                         {p.media && p.media.length > 0 && p.media[0].type === 'image' ? (
                           <img src={p.media[0].url} alt="" className="w-full h-full object-cover" />
@@ -399,7 +518,7 @@ export default function FutureListingsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                );})}
               </tbody>
             </table>
           </div>
@@ -472,15 +591,26 @@ export default function FutureListingsPage() {
               <div className="space-y-4">
                 <h3 className="text-xs font-bold tracking-widest text-[#D4AF37] uppercase">Media (Images/Video/Audio)</h3>
                 
-                <label className={`w-full h-24 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition ${isUploading ? 'border-[#3D2828] bg-[#1C1212]/50' : 'border-[#2C1E1E] hover:border-[#D4AF37] bg-[#1C1212]'}`}>
-                  <input type="file" multiple accept="image/*,video/*,audio/*" onChange={(e) => handleMediaUpload(e.target.files)} className="hidden" disabled={isUploading} />
+                <div 
+                  className={`w-full h-28 border-2 border-dashed rounded-xl flex flex-col items-center justify-center cursor-pointer transition relative ${isDragging ? 'border-[#D4AF37] bg-[#D4AF37]/10 scale-[1.02]' : isUploading ? 'border-[#3D2828] bg-[#1C1212]/50' : 'border-[#2C1E1E] hover:border-[#D4AF37] bg-[#1C1212]'}`}
+                  onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
+                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
+                  onDrop={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); handleMediaUpload(e.dataTransfer.files); }}
+                  onClick={() => document.getElementById('draft-media-file-input').click()}
+                >
+                  <input id="draft-media-file-input" type="file" multiple accept="image/*,video/*,audio/*" onChange={(e) => handleMediaUpload(e.target.files)} className="hidden" disabled={isUploading} />
                   {isUploading ? (
                     <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin mb-2" />
+                  ) : isDragging ? (
+                    <UploadCloud className="w-8 h-8 text-[#D4AF37] mb-2 animate-bounce" />
                   ) : (
                     <UploadCloud className="w-6 h-6 text-[#5A4B4B] mb-2" />
                   )}
-                  <p className="text-xs text-[#A09393]">{isUploading ? 'Uploading to bucket...' : <><span className="text-[#D4AF37]">Click to upload</span> Images, Videos, or Audio</>}</p>
-                </label>
+                  <p className="text-xs text-[#A09393]">
+                    {isUploading ? 'Uploading to bucket...' : isDragging ? <span className="text-[#D4AF37] font-semibold">Drop files here!</span> : <><span className="text-[#D4AF37]">Click to upload</span> or drag & drop Images, Videos, or Audio</>}
+                  </p>
+                </div>
 
                 {formData.media.length > 0 && (
                   <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin mt-4">
@@ -663,6 +793,77 @@ export default function FutureListingsPage() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#1C1212]/95 border border-[#D4AF37]/30 backdrop-blur-md px-6 py-3.5 rounded-2xl flex items-center gap-6 shadow-2xl animate-in slide-in-from-bottom-5 text-white font-sans text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#D4AF37] animate-pulse"></span>
+            <span className="font-bold text-[#D4AF37] font-mono">{selectedIds.length}</span> items selected
+          </div>
+          
+          <div className="h-4 w-px bg-[#2C1E1E]"></div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={bulkPublish}
+              className="px-3.5 py-1.5 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-800/40 hover:border-emerald-500 text-emerald-400 text-xs font-black uppercase tracking-wider rounded-lg transition"
+            >
+              Publish
+            </button>
+            <button 
+              onClick={() => setIsBulkCategoryModalOpen(true)}
+              className="px-3.5 py-1.5 bg-[#D4AF37]/10 hover:bg-[#D4AF37]/20 border border-[#D4AF37]/30 hover:border-[#D4AF37] text-[#D4AF37] text-xs font-black uppercase tracking-wider rounded-lg transition animate-pulse"
+            >
+              Categorize
+            </button>
+            <button 
+              onClick={bulkDelete}
+              className="px-3.5 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-900/50 hover:border-rose-600 text-rose-300 text-xs font-black uppercase tracking-wider rounded-lg transition"
+            >
+              Delete
+            </button>
+            <button 
+              onClick={() => setSelectedIds([])}
+              className="text-[#A09393] hover:text-white transition text-xs font-bold font-mono"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Categorize Modal */}
+      {isBulkCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#160F0F] border border-[#2C1E1E] w-full max-w-md rounded-2xl overflow-hidden shadow-2xl flex flex-col animate-in scale-in">
+            <div className="px-6 py-5 border-b border-[#2C1E1E] bg-[#1C1212] flex items-center justify-between">
+              <h3 className="text-base font-bold text-white tracking-tight">Bulk Categorize ({selectedIds.length} items)</h3>
+              <button onClick={() => setIsBulkCategoryModalOpen(false)} className="text-[#A09393] hover:text-white transition"><X className="w-5 h-5" /></button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#A09393]">Select Category</label>
+                <select 
+                  value={bulkCategory} 
+                  onChange={(e) => setBulkCategory(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-[#1C1212] border border-[#2C1E1E] rounded-xl text-sm text-white focus:border-[#D4AF37] outline-none cursor-pointer"
+                >
+                  {categories.filter(c => c !== 'All').map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-[#1C1212]/50 border-t border-[#2C1E1E] flex justify-end gap-3">
+              <button onClick={() => setIsBulkCategoryModalOpen(false)} className="px-4 py-2 bg-transparent hover:bg-[#2C1E1E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition border border-[#2C1E1E]">Cancel</button>
+              <button onClick={bulkCategorize} className="px-5 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#BFA030] text-black text-xs font-black uppercase tracking-widest rounded-xl transition hover:opacity-90 shadow-md">Apply Category</button>
+            </div>
           </div>
         </div>
       )}
