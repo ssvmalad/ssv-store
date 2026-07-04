@@ -53,6 +53,7 @@ export default function ProductDetails() {
         currentCart.push({
           id: cartItemId,
           name: selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name,
+          variant: selectedVariant ? selectedVariant.name : null,
           price: selectedVariant ? selectedVariant.price : product.price,
           image: (selectedVariant && Array.isArray(selectedVariant.media) && selectedVariant.media.length > 0 && selectedVariant.media[0].type === 'image') 
                    ? selectedVariant.media[0].url 
@@ -109,6 +110,19 @@ export default function ProductDetails() {
     gallery = [{ type: 'image', url: product.image_url }];
   }
 
+  // Get current active display media (overridden by active variant media if available)
+  const getDisplayedMedia = () => {
+    if (selectedVariant) {
+      if (Array.isArray(selectedVariant.media) && selectedVariant.media.length > 0) {
+        return selectedVariant.media[0];
+      } else if (selectedVariant.image) {
+        return { type: 'image', url: selectedVariant.image };
+      }
+    }
+    return gallery.length > 0 ? gallery[activeMedia] : null;
+  };
+  const displayedMedia = getDisplayedMedia();
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Breadcrumbs */}
@@ -126,15 +140,15 @@ export default function ProductDetails() {
         {/* Media Gallery */}
         <div className="lg:col-span-5 space-y-4 max-w-sm sm:max-w-md mx-auto lg:mx-0 w-full">
           <div className="aspect-square max-h-[300px] sm:max-h-[380px] rounded-2xl bg-white border border-[#E2DDD5] shadow-sm overflow-hidden relative flex items-center justify-center">
-            {gallery.length > 0 ? (
-              gallery[activeMedia].type === 'image' ? (
-                <img src={gallery[activeMedia].url} alt={product.name} className="w-full h-full object-cover" />
-              ) : gallery[activeMedia].type === 'video' ? (
-                <video src={gallery[activeMedia].url} controls autoPlay muted loop className="w-full h-full object-contain bg-black" />
-              ) : gallery[activeMedia].type === 'audio' ? (
+            {displayedMedia ? (
+              displayedMedia.type === 'image' ? (
+                <img src={displayedMedia.url} alt={product.name} className="w-full h-full object-cover" />
+              ) : displayedMedia.type === 'video' ? (
+                <video src={displayedMedia.url} controls autoPlay muted loop className="w-full h-full object-contain bg-black" />
+              ) : displayedMedia.type === 'audio' ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-[#FAF9F5] p-8 text-center">
                   <Volume2 className="w-16 h-16 text-[#C5A028] mb-6" />
-                  <audio src={gallery[activeMedia].url} controls className="w-full max-w-md" />
+                  <audio src={displayedMedia.url} controls className="w-full max-w-md" />
                   <p className="text-[#6E6262] mt-4 font-mono text-sm">Audio Sample</p>
                 </div>
               ) : (
@@ -200,7 +214,11 @@ export default function ProductDetails() {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      setSelectedVariant(v);
+                      if (selectedVariant?.name === v.name) {
+                        setSelectedVariant(null);
+                      } else {
+                        setSelectedVariant(v);
+                      }
                     }}
                     className={`flex items-center justify-between sm:justify-start gap-3 px-4 py-2.5 rounded-xl border font-semibold transition w-full sm:w-auto text-left cursor-pointer ${
                       selectedVariant?.name === v.name 
