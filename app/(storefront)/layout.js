@@ -111,7 +111,7 @@ function StorefrontLayoutInner({ children }) {
 
               <Link 
                 href="/track" 
-                className={`transition flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider ${
+                className={`hidden md:flex transition items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider ${
                   pathname === '/track' 
                     ? 'bg-[#FAF9F5] text-[#C5A028] border border-[#E2DDD5] shadow-sm' 
                     : 'text-[#2C1F1F] hover:text-[#C5A028] hover:bg-[#FAF9F5]'
@@ -123,7 +123,7 @@ function StorefrontLayoutInner({ children }) {
 
               <Link 
                 href="/account" 
-                className={`transition flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider ${
+                className={`hidden md:flex transition items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs uppercase tracking-wider ${
                   pathname.startsWith('/account') 
                     ? 'bg-[#FAF9F5] text-[#C5A028] border border-[#E2DDD5] shadow-sm' 
                     : 'text-[#2C1F1F] hover:text-[#C5A028] hover:bg-[#FAF9F5]'
