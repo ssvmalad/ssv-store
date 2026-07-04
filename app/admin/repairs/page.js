@@ -111,9 +111,19 @@ export default function RepairsPage() {
     }
   };
 
+  const parseUploadedFiles = (input) => {
+    if (!input) return [];
+    if (typeof FileList !== 'undefined' && input instanceof FileList) return Array.from(input);
+    if (Array.isArray(input)) return input;
+    if (input.target && input.target.files) return Array.from(input.target.files);
+    if (input.files) return Array.from(input.files);
+    if (typeof input.length === 'number') return Array.from(input);
+    return [];
+  };
+
   // Upload handler to Supabase Storage Bucket 'media'
   const handleMediaUpload = async (input) => {
-    const files = input instanceof FileList || Array.isArray(input) ? Array.from(input) : Array.from(input?.target?.files || []);
+    const files = parseUploadedFiles(input);
     if (!files.length) return;
 
     setIsUploading(true);
@@ -158,7 +168,8 @@ export default function RepairsPage() {
   };
 
   const handleBillUpload = async (input) => {
-    const file = input instanceof FileList ? input[0] : (input?.target?.files?.[0] || null);
+    const files = parseUploadedFiles(input);
+    const file = files.length > 0 ? files[0] : null;
     if (!file) return;
 
     setIsUploading(true);
