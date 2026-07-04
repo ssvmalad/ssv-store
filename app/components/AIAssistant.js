@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { getApiUrl } from '@/lib/utils';
 import { 
   MessageSquare, Sparkles, X, Send, Phone, MessageCircle, 
   Wrench, HelpCircle, Search, ShoppingBag, ArrowRight, BookOpen, Mic, MicOff 
@@ -438,7 +439,7 @@ export default function AIAssistant() {
 
       {/* Chat window drawer */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-full max-w-sm h-[500px] bg-[#FAF9F5] border border-[#E2DDD5] rounded-3xl overflow-hidden shadow-2xl flex flex-col text-[#2C1F1F] animate-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-0 sm:bottom-24 right-0 sm:right-6 z-50 w-full sm:max-w-sm h-full sm:h-[500px] bg-[#FAF9F5] border-t sm:border border-[#E2DDD5] rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col text-[#2C1F1F] animate-in slide-in-from-bottom-5 duration-200">
           {/* Header */}
           <div className="px-5 py-4 bg-[#2C1F1F] text-white flex items-center justify-between border-b border-[#E2DDD5]/10 shrink-0">
             <div className="flex items-center gap-2">
@@ -449,11 +450,22 @@ export default function AIAssistant() {
               </div>
             </div>
 
-            {/* Language Selector toggles */}
-            <div className="flex items-center gap-1.5 bg-black/25 px-2 py-1 rounded-xl text-[10px] font-bold">
-              <button onClick={() => setLanguage('en')} className={`px-1.5 py-0.5 rounded transition ${language === 'en' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>EN</button>
-              <button onClick={() => setLanguage('hi')} className={`px-1.5 py-0.5 rounded transition ${language === 'hi' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>हिं</button>
-              <button onClick={() => setLanguage('mr')} className={`px-1.5 py-0.5 rounded transition ${language === 'mr' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>मरा</button>
+            <div className="flex items-center gap-3">
+              {/* Language Selector toggles */}
+              <div className="flex items-center gap-1.5 bg-black/25 px-2 py-1 rounded-xl text-[10px] font-bold">
+                <button onClick={() => setLanguage('en')} className={`px-1.5 py-0.5 rounded transition ${language === 'en' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>EN</button>
+                <button onClick={() => setLanguage('hi')} className={`px-1.5 py-0.5 rounded transition ${language === 'hi' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>हिं</button>
+                <button onClick={() => setLanguage('mr')} className={`px-1.5 py-0.5 rounded transition ${language === 'mr' ? 'bg-[#C5A028] text-white' : 'text-gray-300'}`}>मरा</button>
+              </div>
+
+              {/* Close Button */}
+              <button 
+                onClick={() => setIsOpen(false)}
+                className="p-1 hover:bg-white/10 rounded-lg transition"
+                title="Close chat"
+              >
+                <X className="w-5 h-5 text-white" />
+              </button>
             </div>
           </div>
 
