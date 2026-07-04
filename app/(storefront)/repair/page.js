@@ -83,8 +83,18 @@ export default function RepairPage() {
     }
   };
 
+  const parseUploadedFiles = (input) => {
+    if (!input) return [];
+    if (typeof FileList !== 'undefined' && input instanceof FileList) return Array.from(input);
+    if (Array.isArray(input)) return input;
+    if (input.target && input.target.files) return Array.from(input.target.files);
+    if (input.files) return Array.from(input.files);
+    if (typeof input.length === 'number') return Array.from(input);
+    return [];
+  };
+
   const handleMediaUpload = async (input) => {
-    const files = input instanceof FileList || Array.isArray(input) ? Array.from(input) : Array.from(input?.target?.files || []);
+    const files = parseUploadedFiles(input);
     if (!files.length) return;
 
     setIsUploading(true);
