@@ -31,6 +31,28 @@ export default function ProductDetails() {
         setProduct(data);
         if (data.variants && data.variants.length > 0) {
           setSelectedVariant(data.variants[0]);
+          
+          // Set initial active media to the first variant's image if available
+          const firstVar = data.variants[0];
+          const varUrl = (firstVar.media && firstVar.media.length > 0) ? firstVar.media[0].url : firstVar.image;
+          if (varUrl) {
+            let tempGallery = [];
+            if (data.media && data.media.length > 0) tempGallery = [...data.media];
+            else if (data.images && data.images.length > 0) tempGallery = data.images.map(url => ({ type: 'image', url }));
+            else if (data.image_url) tempGallery = [{ type: 'image', url: data.image_url }];
+            
+            data.variants.forEach(v => {
+              const url = (v.media && v.media.length > 0) ? v.media[0].url : v.image;
+              if (url && !tempGallery.some(g => g.url === url)) {
+                tempGallery.push({ type: 'image', url });
+              }
+            });
+
+            const idx = tempGallery.findIndex(g => g.url === varUrl);
+            if (idx > -1) {
+              setActiveMedia(idx);
+            }
+          }
         }
       } else {
         // Handle 404 or error
@@ -100,28 +122,27 @@ export default function ProductDetails() {
 
   if (!product) return null;
 
-  // Combine legacy images and new media for the gallery
+  // Combine legacy images, new media, and any unique variant media/images for the unified gallery
   let gallery = [];
   if (product.media && product.media.length > 0) {
-    gallery = product.media;
+    gallery = [...product.media];
   } else if (product.images && product.images.length > 0) {
     gallery = product.images.map(url => ({ type: 'image', url }));
   } else if (product.image_url) {
     gallery = [{ type: 'image', url: product.image_url }];
   }
 
-  // Get current active display media (overridden by active variant media if available)
-  const getDisplayedMedia = () => {
-    if (selectedVariant) {
-      if (Array.isArray(selectedVariant.media) && selectedVariant.media.length > 0) {
-        return selectedVariant.media[0];
-      } else if (selectedVariant.image) {
-        return { type: 'image', url: selectedVariant.image };
+  // Append any unique variant images not already present in the general gallery
+  if (product.variants && product.variants.length > 0) {
+    product.variants.forEach(v => {
+      const varUrl = (v.media && v.media.length > 0) ? v.media[0].url : v.image;
+      if (varUrl && !gallery.some(g => g.url === varUrl)) {
+        gallery.push({ type: 'image', url: varUrl });
       }
-    }
-    return gallery.length > 0 ? gallery[activeMedia] : null;
-  };
-  const displayedMedia = getDisplayedMedia();
+    });
+  }
+
+  const displayedMedia = gallery.length > 0 ? gallery[activeMedia] : null;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -165,7 +186,18 @@ export default function ProductDetails() {
               {gallery.map((item, index) => (
                 <button 
                   key={index}
-                  onClick={() => setActiveMedia(index)}
+                  onClick={() => {
+                    setActiveMedia(index);
+                    if (product.variants && product.variants.length > 0) {
+                      const matchingVariant = product.variants.find(v => {
+                        const varUrl = (v.media && v.media.length > 0) ? v.media[0].url : v.image;
+                        return varUrl === item.url;
+                      });
+                      if (matchingVariant) {
+                        setSelectedVariant(matchingVariant);
+                      }
+                    }
+                  }}
                   className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${activeMedia === index ? 'border-[#C5A028]' : 'border-transparent hover:border-[#E2DDD5]'}`}
                 >
                   {item.type === 'image' ? (
@@ -218,6 +250,14 @@ export default function ProductDetails() {
                         setSelectedVariant(null);
                       } else {
                         setSelectedVariant(v);
+                        // Sync active gallery image
+                        const varUrl = (v.media && v.media.length > 0) ? v.media[0].url : v.image;
+                        if (varUrl) {
+                          const idx = gallery.findIndex(g => g.url === varUrl);
+                          if (idx > -1) {
+                            setActiveMedia(idx);
+                          }
+                        }
                       }
                     }}
                     className={`flex items-center justify-between sm:justify-start gap-3 px-4 py-2.5 rounded-xl border font-semibold transition w-full sm:w-auto text-left cursor-pointer ${
