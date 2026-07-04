@@ -65,11 +65,66 @@ export default function FutureListingsPage() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkCategoryModalOpen, setIsBulkCategoryModalOpen] = useState(false);
   const [bulkCategory, setBulkCategory] = useState('Percussion');
+  const [lastSelectedId, setLastSelectedId] = useState(null);
 
-  const toggleSelectProduct = (id) => {
+  const handleItemClick = (id, e) => {
+    if (e.shiftKey && lastSelectedId) {
+      const activeIds = filteredProducts.map(p => p.id);
+      const startIdx = activeIds.indexOf(lastSelectedId);
+      const endIdx = activeIds.indexOf(id);
+      if (startIdx !== -1 && endIdx !== -1) {
+        const [minIdx, maxIdx] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+        const rangeIds = activeIds.slice(minIdx, maxIdx + 1);
+        const isSelecting = !selectedIds.includes(id);
+        setSelectedIds(prev => {
+          if (isSelecting) {
+            return Array.from(new Set([...prev, ...rangeIds]));
+          } else {
+            return prev.filter(x => !rangeIds.includes(x));
+          }
+        });
+        setLastSelectedId(id);
+        return;
+      }
+    }
+    
+    if (e.ctrlKey || e.metaKey) {
+      setSelectedIds(prev => 
+        prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      );
+      setLastSelectedId(id);
+      return;
+    }
+    
+    setSelectedIds([id]);
+    setLastSelectedId(id);
+  };
+
+  const handleCheckboxClick = (id, e) => {
+    if (e.shiftKey && lastSelectedId) {
+      const activeIds = filteredProducts.map(p => p.id);
+      const startIdx = activeIds.indexOf(lastSelectedId);
+      const endIdx = activeIds.indexOf(id);
+      if (startIdx !== -1 && endIdx !== -1) {
+        const [minIdx, maxIdx] = startIdx < endIdx ? [startIdx, endIdx] : [endIdx, startIdx];
+        const rangeIds = activeIds.slice(minIdx, maxIdx + 1);
+        const isSelecting = !selectedIds.includes(id);
+        setSelectedIds(prev => {
+          if (isSelecting) {
+            return Array.from(new Set([...prev, ...rangeIds]));
+          } else {
+            return prev.filter(x => !rangeIds.includes(x));
+          }
+        });
+        setLastSelectedId(id);
+        return;
+      }
+    }
+    
     setSelectedIds(prev => 
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
     );
+    setLastSelectedId(id);
   };
 
   const toggleSelectAll = () => {
@@ -410,15 +465,20 @@ export default function FutureListingsPage() {
             return (
             <div key={p.id} className="relative group">
               {/* Checkbox Overlay */}
-              <div className="absolute top-3.5 left-3.5 z-20" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute top-3.5 left-3.5 z-20">
                 <input 
                   type="checkbox" 
                   checked={isSelected}
-                  onChange={() => toggleSelectProduct(p.id)}
+                  onChange={(e) => handleCheckboxClick(p.id, e)}
+                  onClick={(e) => e.stopPropagation()}
                   className="w-4 h-4 rounded border-[#2C1E1E] text-[#D4AF37] focus:ring-[#D4AF37] focus:ring-opacity-20 cursor-pointer accent-[#D4AF37]"
                 />
               </div>
-              <div onClick={() => openEditModal(p)} className={`bg-[#160F0F] rounded-2xl border overflow-hidden group cursor-pointer hover:border-[#3D2828] transition flex flex-col shadow-lg hover:shadow-xl hover:shadow-[#D4AF37]/5 ${isSelected ? 'border-[#D4AF37]/80 ring-1 ring-[#D4AF37]/30' : 'border-[#2C1E1E]'}`}>
+              <div 
+                onClick={(e) => handleItemClick(p.id, e)} 
+                onDoubleClick={() => openEditModal(p)} 
+                className={`bg-[#160F0F] rounded-2xl border overflow-hidden group cursor-pointer hover:border-[#3D2828] transition flex flex-col shadow-lg hover:shadow-xl hover:shadow-[#D4AF37]/5 ${isSelected ? 'border-[#D4AF37]/80 ring-1 ring-[#D4AF37]/30' : 'border-[#2C1E1E]'}`}
+              >
                 <div className="aspect-[4/3] bg-[#1C1212] relative overflow-hidden">
                   {p.media && p.media.length > 0 && p.media[0].type === 'image' ? (
                     <img src={p.media[0].url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
@@ -479,12 +539,18 @@ export default function FutureListingsPage() {
                 {filteredProducts.map((p) => {
                   const isSelected = selectedIds.includes(p.id);
                   return (
-                  <tr key={p.id} className={`hover:bg-[#1C1212] transition-colors group ${isSelected ? 'bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10' : ''}`}>
+                  <tr 
+                    key={p.id} 
+                    onClick={(e) => handleItemClick(p.id, e)} 
+                    onDoubleClick={() => openEditModal(p)} 
+                    className={`hover:bg-[#1C1212] transition-colors group cursor-pointer ${isSelected ? 'bg-[#D4AF37]/5 hover:bg-[#D4AF37]/10' : ''}`}
+                  >
                     <td className="p-4 pl-6 w-12" onClick={(e) => e.stopPropagation()}>
                       <input 
                         type="checkbox" 
                         checked={isSelected}
-                        onChange={() => toggleSelectProduct(p.id)}
+                        onChange={(e) => handleCheckboxClick(p.id, e)}
+                        onClick={(e) => e.stopPropagation()}
                         className="w-4 h-4 rounded border-[#2C1E1E] text-[#D4AF37] focus:ring-[#D4AF37] cursor-pointer accent-[#D4AF37]"
                       />
                     </td>
