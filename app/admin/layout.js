@@ -53,7 +53,8 @@ export default function AdminLayout({ children }) {
     {
       title: "Sales & Fulfillment",
       items: [
-        { name: 'Orders & Deliveries', href: '/admin/orders', icon: ShoppingCart },
+        { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
+        { name: 'Deliveries', href: '/admin/deliveries', icon: Truck },
       ]
     },
     {
