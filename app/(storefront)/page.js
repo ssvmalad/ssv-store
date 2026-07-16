@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { ArrowRight, Star, ChevronRight, ShoppingBag, MapPin, Phone, Share2, MessageCircle, X } from 'lucide-react';
+import { ArrowRight, Star, ChevronRight, ShoppingBag, MapPin, Phone, Share2, MessageCircle, X, Heart } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function StorefrontHome() {
@@ -11,6 +11,28 @@ export default function StorefrontHome() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const items = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+      setWishlistIds(items);
+    }
+  }, []);
+
+  const toggleWishlist = (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let updated;
+    if (wishlistIds.includes(productId)) {
+      updated = wishlistIds.filter(id => id !== productId);
+    } else {
+      updated = [...wishlistIds, productId];
+    }
+    setWishlistIds(updated);
+    localStorage.setItem('ssv_wishlist', JSON.stringify(updated));
+    window.dispatchEvent(new Event('wishlistUpdated'));
+  };
 
   useEffect(() => {
     async function fetchFeatured() {
@@ -144,6 +166,16 @@ export default function StorefrontHome() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#8C7E7E]">No Image</div>
                     )}
+                    <button
+                      onClick={(e) => toggleWishlist(e, p.id)}
+                      className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-md border border-[#E2DDD5] flex items-center justify-center text-[#2C1F1F] hover:text-rose-500 transition-all shadow-sm active:scale-95"
+                    >
+                      <Heart 
+                        className={`w-4 h-4 transition duration-300 ${
+                          wishlistIds.includes(p.id) ? 'fill-rose-500 text-rose-500 scale-110' : 'text-[#8C7E7E]'
+                        }`} 
+                      />
+                    </button>
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-md border border-[#E2DDD5] px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider text-[#C5A028]">{p.category}</div>
                   </div>
                   <div className="p-5">
@@ -154,6 +186,61 @@ export default function StorefrontHome() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Music Classes Promotion Section */}
+      <section className="py-24 bg-[#FAF9F5] border-t border-b border-[#EAE6DF] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-5 mix-blend-multiply"></div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-7 space-y-6">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C5A028]/10 text-[10px] font-bold uppercase tracking-wider text-[#C5A028] border border-[#C5A028]/25">
+                <Star className="w-3.5 h-3.5 fill-[#C5A028]" /> Music Academy
+              </span>
+              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter text-[#2C1F1F]">
+                Professional Music Classes in Malad East
+              </h2>
+              <p className="text-[#6E6262] text-lg leading-relaxed max-w-2xl">
+                Unlock your musical potential with expert-guided tuition in Tabla, Dholak, Dholki, Harmonium, and Keyboard. We offer beginner-to-advanced courses with batch options tailored for both kids and adults.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-6 pt-4 max-w-md">
+                <div className="space-y-1">
+                  <span className="text-2xl font-black text-[#C5A028] font-mono">₹1,500</span>
+                  <p className="text-xs text-[#8C7E7E] font-medium">Standard monthly fee (Tabla, Dholak, Harmonium)</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-2xl font-black text-[#C5A028] font-mono">₹2,500</span>
+                  <p className="text-xs text-[#8C7E7E] font-medium">Keyboard classes monthly fee</p>
+                </div>
+              </div>
+
+              <div className="pt-6 flex flex-wrap gap-4">
+                <Link href="/classes" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-[#C5A028] text-white font-bold text-sm rounded-full transition hover:bg-[#A98920] shadow-md hover:shadow-lg">
+                  Explore Timings & Batches <ArrowRight className="w-4 h-4" />
+                </Link>
+                <a href="https://wa.me/918591223874?text=Hello!%20I%20am%20interested%20in%20joining%20your%20music%20classes." target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white border border-[#E2DDD5] text-[#2C1F1F] font-bold text-sm rounded-full transition hover:bg-gray-50">
+                  <MessageCircle className="w-4.5 h-4.5 text-[#25D366]" /> Chat to Enrol
+                </a>
+              </div>
+            </div>
+            
+            <div className="lg:col-span-5 relative">
+              <div className="aspect-[4/3] rounded-3xl overflow-hidden border border-[#E2DDD5] shadow-lg relative bg-[#FAF9F5]">
+                <img 
+                  src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?q=80&w=800&auto=format&fit=crop" 
+                  alt="Music Classroom" 
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#2C1F1F]/40 to-transparent"></div>
+                <div className="absolute bottom-6 left-6 right-6 p-5 bg-white/90 backdrop-blur-md rounded-2xl border border-[#E2DDD5]/40 shadow-md">
+                  <h4 className="font-bold text-sm text-[#2C1F1F] mb-1">Academy Address</h4>
+                  <p className="text-xs text-[#6E6262] leading-normal font-medium">104, Pawansut Building, Tanaji Nagar Road, Malad East, Mumbai - 97</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

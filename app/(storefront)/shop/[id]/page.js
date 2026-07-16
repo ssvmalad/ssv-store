@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { ShoppingBag, MessageCircle, ChevronRight, Check, ArrowLeft, Play, Volume2 } from 'lucide-react';
+import { ShoppingBag, MessageCircle, ChevronRight, Check, ArrowLeft, Play, Volume2, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -17,6 +17,32 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && params.id) {
+      const items = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+      const pid = isNaN(params.id) ? params.id : parseInt(params.id);
+      setIsWishlisted(items.includes(pid));
+    }
+  }, [params.id]);
+
+  const toggleWishlist = (e) => {
+    e.preventDefault();
+    if (!params.id) return;
+    const items = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+    let updated;
+    const pid = isNaN(params.id) ? params.id : parseInt(params.id);
+    if (items.includes(pid)) {
+      updated = items.filter(id => id !== pid);
+      setIsWishlisted(false);
+    } else {
+      updated = [...items, pid];
+      setIsWishlisted(true);
+    }
+    localStorage.setItem('ssv_wishlist', JSON.stringify(updated));
+    window.dispatchEvent(new Event('wishlistUpdated'));
+  };
 
   useEffect(() => {
     async function fetchProduct() {
@@ -295,6 +321,17 @@ export default function ProductDetails() {
               ) : (
                 <><ShoppingBag className="w-5 h-5" /> {t('addToCart')}</>
               )}
+            </button>
+
+            <button 
+              onClick={toggleWishlist}
+              className={`w-14 h-14 rounded-full border flex items-center justify-center transition shadow-sm shrink-0 active:scale-95 ${
+                isWishlisted 
+                  ? 'bg-rose-50 border-rose-200 text-rose-500 hover:bg-rose-100' 
+                  : 'bg-[#FAF9F5] border-[#E2DDD5] text-[#2C1F1F] hover:bg-white hover:border-[#C5A028]'
+              }`}
+            >
+              <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-500' : ''}`} />
             </button>
           </div>
 

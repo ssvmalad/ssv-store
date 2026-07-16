@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  LayoutDashboard, Package, Clock, Wrench, 
+  LayoutDashboard, Package, Clock, Wrench, BookOpen,
   ShoppingCart, Truck, Users, Settings, 
   Menu, X, Activity, Search 
 } from 'lucide-react';
@@ -47,6 +47,7 @@ export default function AdminLayout({ children }) {
     {
       title: "Services",
       items: [
+        { name: 'Classes', href: '/admin/classes', icon: BookOpen },
         { name: 'Repairs', href: '/admin/repairs', icon: Wrench },
       ]
     },

@@ -23,6 +23,8 @@ export default function CartPage() {
   const [createdOrder, setCreatedOrder] = useState(null);
   const [specialInstructionsText, setSpecialInstructionsText] = useState('');
   const [specialInstructionsFiles, setSpecialInstructionsFiles] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('upi'); // 'upi', 'cod'
+  const [utrNumber, setUtrNumber] = useState('');
 
   // Guest login states
   const [isLogin, setIsLogin] = useState(true);
@@ -141,8 +143,8 @@ export default function CartPage() {
           items: cart,
           total_price: calculateTotal(),
           status: 'pending',
-          payment_method: 'whatsapp',
-          payment_status: 'pending',
+          payment_method: paymentMethod === 'upi' ? `UPI (UTR: ${utrNumber || 'N/A'})` : 'Cash on Delivery',
+          payment_status: paymentMethod === 'upi' ? 'proof_submitted' : 'pending',
           special_instructions: specialInstructionsText,
           special_files: specialInstructionsFiles
         })
@@ -487,15 +489,65 @@ export default function CartPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C7E7E]">Payment Option</h4>
-                    <div className="flex items-start gap-4 p-4 border border-[#C5A028] bg-[#C5A028]/5 rounded-2xl">
-                      <div className="mt-1 p-2 rounded-lg bg-[#25D366]/10 text-[#25D366]"><MessageCircle className="w-5 h-5" /></div>
-                      <div className="flex-1">
-                        <div className="text-sm font-bold text-[#2C1F1F]">Pay via WhatsApp</div>
-                        <div className="text-xs text-[#6E6262]">Final bill discussed on WhatsApp. Pay on delivery/UPI.</div>
-                      </div>
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C7E7E]">Payment Option *</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Direct UPI Option */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('upi')}
+                        className={`flex flex-col items-start p-4 rounded-2xl border text-left cursor-pointer transition ${
+                          paymentMethod === 'upi'
+                            ? 'border-[#C5A028] bg-[#C5A028]/5 text-[#D4AF37] shadow-sm'
+                            : 'border-[#E2DDD5] bg-white text-[#6E6262] hover:border-[#C5A028]'
+                        }`}
+                      >
+                        <span className="text-sm font-bold block mb-1">Direct UPI Transfer</span>
+                        <span className="text-[10px] opacity-80 leading-normal">Pay instantly using any UPI app (GPay, PhonePe, Paytm, etc.).</span>
+                      </button>
+
+                      {/* COD Option */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethod('cod')}
+                        className={`flex flex-col items-start p-4 rounded-2xl border text-left cursor-pointer transition ${
+                          paymentMethod === 'cod'
+                            ? 'border-[#C5A028] bg-[#C5A028]/5 text-[#D4AF37] shadow-sm'
+                            : 'border-[#E2DDD5] bg-white text-[#6E6262] hover:border-[#C5A028]'
+                        }`}
+                      >
+                        <span className="text-sm font-bold block mb-1">Cash on Delivery</span>
+                        <span className="text-[10px] opacity-80 leading-normal">Pay with cash when the instrument reaches your doorstep.</span>
+                      </button>
                     </div>
+
+                    {paymentMethod === 'upi' && (
+                      <div className="p-4 bg-[#F5F2EB] border border-[#E2DDD5] rounded-2xl space-y-3.5">
+                        <div className="text-xs text-[#2C1F1F] font-semibold leading-relaxed">
+                          Please transfer the order subtotal amount directly to our bank UPI ID or GPay Mobile Number:
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between p-3 bg-white border border-[#E2DDD5] rounded-xl font-mono text-xs font-bold text-[#C5A028] select-all">
+                            <span className="text-[10px] font-sans font-normal text-[#6E6262] select-none">UPI ID:</span>
+                            <span>yashpokle1234@sbi</span>
+                          </div>
+                          <div className="flex items-center justify-between p-3 bg-white border border-[#E2DDD5] rounded-xl font-mono text-xs font-bold text-[#C5A028] select-all">
+                            <span className="text-[10px] font-sans font-normal text-[#6E6262] select-none">GPay / Mobile:</span>
+                            <span>8591223874</span>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase tracking-wider text-[#8C7E7E] block mb-1">UPI Transaction ID / UTR Number *</label>
+                          <input
+                            type="text"
+                            value={utrNumber}
+                            onChange={(e) => setUtrNumber(e.target.value)}
+                            placeholder="Enter 12-digit UTR or Ref number"
+                            className="w-full px-4 py-2 bg-white border border-[#E2DDD5] rounded-xl text-xs font-mono text-[#2C1F1F] focus:border-[#C5A028] outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -520,19 +572,35 @@ export default function CartPage() {
                     Your order request was stored. Reach us on WhatsApp to finalize invoice details and shipping costs.
                   </p>
 
-                  <div className="bg-white border border-[#E2DDD5] rounded-2xl p-5 mx-auto max-w-sm space-y-4 shadow-sm text-center">
-                    <h5 className="font-bold text-[#2C1F1F] text-xs uppercase tracking-wider">Direct GPay / UPI Payment</h5>
-                    <img src="/upi-qr.jpg" alt="UPI QR Code" className="w-40 h-40 mx-auto rounded-xl border border-[#E2DDD5] object-contain p-2" />
-                    <div className="text-sm font-mono text-[#6E6262]">UPI ID: yashpokle1234@oksbi</div>
-                    <div className="text-xs font-bold bg-[#FAF9F5] py-2 rounded-lg text-[#2C1F1F] border border-[#E2DDD5]">
-                      Phone / GPay: <span className="font-mono text-[#C5A028]">8591223874</span>
+                  {paymentMethod === 'upi' ? (
+                    <div className="bg-white border border-[#E2DDD5] rounded-2xl p-5 mx-auto max-w-sm space-y-4 shadow-sm text-center">
+                      <h5 className="font-bold text-[#2C1F1F] text-xs uppercase tracking-wider">Direct GPay / UPI Payment</h5>
+                      <img src="/upi-qr.jpg" alt="UPI QR Code" className="w-40 h-40 mx-auto rounded-xl border border-[#E2DDD5] object-contain p-2" />
+                      <div className="text-sm font-mono text-[#6E6262]">UPI ID: yashpokle1234@sbi</div>
+                      <div className="text-sm font-mono text-[#6E6262]">GPay / Phone: 8591223874</div>
+                      {utrNumber && (
+                        <div className="text-xs bg-[#FAF9F5] py-2 px-3 rounded-lg border border-[#E2DDD5] text-[#2C1F1F] font-mono break-all">
+                          UTR Submitted: <span className="font-bold">{utrNumber}</span>
+                        </div>
+                      )}
                     </div>
-                  </div>
+                  ) : (
+                    <div className="bg-white border border-[#E2DDD5] rounded-2xl p-5 mx-auto max-w-sm space-y-3 shadow-sm text-center">
+                      <h5 className="font-bold text-amber-700 text-xs uppercase tracking-wider">Cash on Delivery (COD)</h5>
+                      <p className="text-xs text-[#6E6262] leading-normal">
+                        Please prepare cash payment of ₹{createdOrder?.total_price.toLocaleString()} for when our delivery partner reaches your address.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="border-t border-[#E2DDD5] pt-6 flex flex-col sm:flex-row gap-3 justify-center">
                     <button 
                       onClick={() => {
-                        let text = `Hello! I just placed an order.\n\n*Order ID:* ${createdOrder?.id || 'Pending'}\n*Payment Method:* WHATSAPP\n*Payment Status:* PENDING\n\n*Items:*`;
+                        let text = `Hello! I just placed an order.\n\n*Order ID:* ${createdOrder?.id || 'Pending'}\n*Payment Method:* ${paymentMethod === 'upi' ? 'DIRECT UPI TRANSFER' : 'CASH ON DELIVERY'}`;
+                        if (paymentMethod === 'upi' && utrNumber) {
+                          text += `\n*UTR Reference:* ${utrNumber}`;
+                        }
+                        text += `\n*Payment Status:* ${paymentMethod === 'upi' ? 'COMPLETED (UTR ATTACHED)' : 'PAY ON DELIVERY'}\n\n*Items:*`;
                         if (createdOrder && createdOrder.items) {
                           createdOrder.items.forEach(item => {
                             text += `\n- ${item.quantity}x ${item.name} (₹${item.price.toLocaleString()})`;
@@ -567,6 +635,10 @@ export default function CartPage() {
                   onClick={() => {
                     if (!shippingInfo.name || !shippingInfo.phone) {
                       alert("Please fill out your Name and Phone Number.");
+                      return;
+                    }
+                    if (paymentMethod === 'upi' && !utrNumber.trim()) {
+                      alert("Please enter your UPI Transaction ID / UTR Number for verification.");
                       return;
                     }
                     handleCheckoutWhatsApp();

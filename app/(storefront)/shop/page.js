@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { Filter, ChevronDown, SlidersHorizontal, Search, ArrowRight } from 'lucide-react';
+import { Filter, ChevronDown, SlidersHorizontal, Search, ArrowRight, Heart } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function ShopCatalog() {
@@ -11,10 +11,34 @@ export default function ShopCatalog() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // Wishlist State
+  const [wishlistIds, setWishlistIds] = useState([]);
+  
   // Filters
   const [category, setCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const items = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+      setWishlistIds(items);
+    }
+  }, []);
+
+  const toggleWishlist = (e, productId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    let updated;
+    if (wishlistIds.includes(productId)) {
+      updated = wishlistIds.filter(id => id !== productId);
+    } else {
+      updated = [...wishlistIds, productId];
+    }
+    setWishlistIds(updated);
+    localStorage.setItem('ssv_wishlist', JSON.stringify(updated));
+    window.dispatchEvent(new Event('wishlistUpdated'));
+  };
 
   useEffect(() => {
     async function fetchProducts() {
@@ -134,6 +158,16 @@ export default function ShopCatalog() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-[#8C7E7E]">No Image</div>
                     )}
+                    <button
+                      onClick={(e) => toggleWishlist(e, p.id)}
+                      className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/95 backdrop-blur-md border border-[#E2DDD5] flex items-center justify-center text-[#2C1F1F] hover:text-rose-500 transition-all shadow-sm active:scale-95"
+                    >
+                      <Heart 
+                        className={`w-4 h-4 transition duration-300 ${
+                          wishlistIds.includes(p.id) ? 'fill-rose-500 text-rose-500 scale-110' : 'text-[#8C7E7E]'
+                        }`} 
+                      />
+                    </button>
                     <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-md border border-[#E2DDD5] px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-wider text-[#C5A028]">{p.category}</div>
                   </div>
                   <div className="p-5 flex flex-col justify-between" style={{ minHeight: '140px' }}>

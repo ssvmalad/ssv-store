@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useLanguage } from '@/lib/LanguageContext';
 import { 
   User, Mail, Lock, ArrowRight, LogOut, Package, Save, ExternalLink, 
-  Eye, EyeOff, MessageCircle, Check, Loader2, X, ClipboardList, Wrench, Truck, ChevronRight 
+  Eye, EyeOff, MessageCircle, Check, Loader2, X, ClipboardList, Wrench, Truck, ChevronRight, Heart, Trash2, ShoppingCart, BookOpen, MapPin
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -15,7 +15,75 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   
   // Tabs selector
-  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'profile'
+  const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'wishlist', 'classes', 'profile'
+
+  // Wishlist Tab State
+  const [wishlistProducts, setWishlistProducts] = useState([]);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+
+  // Classes Tab State
+  const [classesData, setClassesData] = useState(null);
+  const [classesLoading, setClassesLoading] = useState(false);
+
+  const fetchClassesData = async () => {
+    setClassesLoading(true);
+    try {
+      const res = await fetch('/api/classes');
+      if (res.ok) {
+        const data = await res.json();
+        setClassesData(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch classes:", err);
+    } finally {
+      setClassesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'classes') {
+      fetchClassesData();
+    }
+  }, [activeTab]);
+
+  const fetchWishlistProducts = async () => {
+    setWishlistLoading(true);
+    try {
+      const savedIds = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+      if (savedIds.length === 0) {
+        setWishlistProducts([]);
+        setWishlistLoading(false);
+        return;
+      }
+      
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .in('id', savedIds);
+        
+      if (!error && data) {
+        setWishlistProducts(data);
+      }
+    } catch (err) {
+      console.error("Failed to load wishlist products:", err);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  const handleRemoveFromWishlist = (productId) => {
+    const savedIds = JSON.parse(localStorage.getItem('ssv_wishlist') || '[]');
+    const updated = savedIds.filter(id => id !== productId);
+    localStorage.setItem('ssv_wishlist', JSON.stringify(updated));
+    setWishlistProducts(prev => prev.filter(p => p.id !== productId));
+    window.dispatchEvent(new Event('wishlistUpdated'));
+  };
+
+  useEffect(() => {
+    if (activeTab === 'wishlist') {
+      fetchWishlistProducts();
+    }
+  }, [activeTab]);
 
   // Auth panel inline states
   const [isLogin, setIsLogin] = useState(true);
@@ -47,6 +115,10 @@ export default function AccountPage() {
         setActiveTab('profile');
       } else if (tab === 'orders') {
         setActiveTab('orders');
+      } else if (tab === 'wishlist') {
+        setActiveTab('wishlist');
+      } else if (tab === 'classes') {
+        setActiveTab('classes');
       }
     }
 
@@ -503,18 +575,34 @@ export default function AccountPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex bg-[#FAF9F5] p-1 rounded-2xl mb-8 border border-[#E2DDD5] max-w-xs shrink-0 font-sans">
+      <div className="flex bg-[#FAF9F5] p-1 rounded-2xl mb-8 border border-[#E2DDD5] max-w-lg shrink-0 font-sans flex-wrap sm:flex-nowrap gap-1">
         <button
           onClick={() => setActiveTab('orders')}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
             activeTab === 'orders' ? 'bg-white text-[#C5A028] shadow-sm border border-[#E2DDD5]' : 'text-[#8C7E7E] hover:text-[#2C1F1F]'
           }`}
         >
           <Package className="w-4 h-4" /> Orders & Repairs
         </button>
         <button
+          onClick={() => setActiveTab('wishlist')}
+          className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
+            activeTab === 'wishlist' ? 'bg-white text-[#C5A028] shadow-sm border border-[#E2DDD5]' : 'text-[#8C7E7E] hover:text-[#2C1F1F]'
+          }`}
+        >
+          <Heart className="w-4 h-4 text-rose-500 fill-rose-500" /> Wishlist
+        </button>
+        <button
+          onClick={() => setActiveTab('classes')}
+          className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
+            activeTab === 'classes' ? 'bg-white text-[#C5A028] shadow-sm border border-[#E2DDD5]' : 'text-[#8C7E7E] hover:text-[#2C1F1F]'
+          }`}
+        >
+          <BookOpen className="w-4 h-4 text-sky-500" /> Classes
+        </button>
+        <button
           onClick={() => setActiveTab('profile')}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 ${
+          className={`flex-1 py-2 px-2.5 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
             activeTab === 'profile' ? 'bg-white text-[#C5A028] shadow-sm border border-[#E2DDD5]' : 'text-[#8C7E7E] hover:text-[#2C1F1F]'
           }`}
         >
@@ -616,6 +704,152 @@ export default function AccountPage() {
                 <div className="text-center py-20 bg-white rounded-2xl border border-[#E2DDD5] text-[#8C7E7E] text-sm">
                   No orders or repair requests found under this account.
                 </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'wishlist' && (
+            <div className="space-y-4">
+              {wishlistLoading ? (
+                <div className="text-center py-20 text-sm text-[#C5A028] font-mono animate-pulse">LOADING WISHLIST...</div>
+              ) : wishlistProducts.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {wishlistProducts.map(p => (
+                    <div key={p.id} className="bg-white border border-[#E2DDD5] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:border-[#C5A028]/40 transition duration-300">
+                      <div className="flex gap-3 p-4">
+                        <div className="w-20 h-20 bg-[#FAF9F5] border border-[#E2DDD5] rounded-xl overflow-hidden shrink-0">
+                          {p.media && p.media.length > 0 && p.media[0].type === 'image' ? (
+                            <img src={p.media[0].url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : p.image_url ? (
+                            <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[#8C7E7E] text-[10px]">No Image</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-sm text-[#2C1F1F] truncate">{p.name}</h4>
+                          <p className="text-xs text-[#6E6262] line-clamp-1 mb-2">{p.description}</p>
+                          <span className="font-mono text-sm text-[#C5A028] font-bold">₹{p.price?.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      <div className="bg-[#FAF9F5] border-t border-[#E2DDD5] px-4 py-3 flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleRemoveFromWishlist(p.id)}
+                          className="p-2 rounded-xl bg-white border border-[#E2DDD5] hover:bg-rose-50 hover:border-rose-200 text-[#8C7E7E] hover:text-rose-600 transition"
+                          title="Remove from Wishlist"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <Link
+                          href={`/shop/${p.id}`}
+                          className="flex-1 max-w-[120px] flex items-center justify-center gap-1 py-2 rounded-xl bg-[#C5A028] hover:bg-[#A98920] text-white font-bold text-[10px] uppercase tracking-wider transition"
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5" /> View
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 bg-white border border-[#E2DDD5] rounded-3xl p-8 shadow-sm">
+                  <Heart className="w-12 h-12 text-[#8C7E7E] mx-auto mb-4" />
+                  <h3 className="text-lg font-bold text-[#2C1F1F] mb-1">Your wishlist is empty</h3>
+                  <p className="text-[#6E6262] text-sm mb-6">Explore our catalog of premium musical instruments to add items.</p>
+                  <Link 
+                    href="/shop" 
+                    className="inline-flex items-center gap-1.5 px-6 py-2.5 bg-[#C5A028] hover:bg-[#A98920] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition"
+                  >
+                    Start Shopping
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {activeTab === 'classes' && (
+            <div className="space-y-6">
+              {classesLoading ? (
+                <div className="text-center py-20 text-sm text-[#C5A028] font-mono animate-pulse">LOADING CLASSES SCHEDULE...</div>
+              ) : classesData ? (
+                <div className="space-y-6">
+                  {/* General Banner */}
+                  <div className="bg-[#FAF9F5] border border-[#E2DDD5] rounded-3xl p-6 sm:p-8 shadow-sm">
+                    <h3 className="font-extrabold text-2xl text-[#2C1F1F] mb-3">{classesData.general.title}</h3>
+                    <p className="text-sm text-[#6E6262] leading-relaxed mb-6">{classesData.general.description}</p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-[#E2DDD5]">
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-sky-50 border border-sky-200 text-sky-600 flex items-center justify-center shrink-0">
+                          <MapPin className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C7E7E]">{classesData.general.location_title}</h4>
+                          <p className="text-xs font-semibold text-[#2C1F1F] mt-1 leading-relaxed">{classesData.general.location_address}</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+                          <MessageCircle className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-[#8C7E7E]">Contact Instructors</h4>
+                          <div className="flex flex-col gap-1 mt-1">
+                            {classesData.general.contact_phones.map(phone => (
+                              <a key={phone} href={`https://wa.me/${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs font-mono font-bold text-[#C5A028] hover:underline flex items-center gap-1">
+                                {phone}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Course Cards Grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {classesData.courses.map(course => (
+                      <div key={course.id} className="bg-white border border-[#E2DDD5] rounded-3xl p-6 shadow-sm flex flex-col justify-between hover:border-[#C5A028]/45 transition duration-300">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start gap-2">
+                            <div>
+                              <h4 className="font-extrabold text-[#2C1F1F] text-lg leading-tight">{course.name}</h4>
+                              <p className="text-xs text-[#8C7E7E] mt-0.5">Instructor: {course.instructor}</p>
+                            </div>
+                            <span className="font-mono text-sm bg-sky-50 text-sky-600 px-3 py-1 rounded-full font-bold border border-sky-100 shrink-0">
+                              ₹{course.fee} <span className="text-[10px] font-sans font-normal opacity-85">/mo</span>
+                            </span>
+                          </div>
+
+                          <div className="space-y-3">
+                            <h5 className="text-[10px] font-bold uppercase tracking-wider text-[#8C7E7E]">Batch Timings</h5>
+                            <div className="space-y-1.5">
+                              {course.schedule.map((slot, index) => (
+                                <div key={index} className="text-xs text-[#6E6262] leading-relaxed flex items-start gap-2">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#C5A028] mt-1.5 shrink-0"></span>
+                                  <span>{slot}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="pt-6 border-t border-[#E2DDD5]/70 mt-6 flex justify-between items-center gap-4">
+                          <p className="text-[10px] text-[#8C7E7E] leading-normal">{course.fee_note}</p>
+                          <a
+                            href={`https://wa.me/918591223874?text=${encodeURIComponent(`Hello, I would like to enroll/inquire about the ${course.name}.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#C5A028] hover:bg-[#A98920] text-white font-bold text-[10px] uppercase tracking-wider rounded-xl transition shadow-sm shrink-0"
+                          >
+                            <MessageCircle className="w-3.5 h-3.5" /> Enrol Now
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-20 text-sm text-[#8C7E7E]">Could not load class timing configuration.</div>
               )}
             </div>
           )}

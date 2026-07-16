@@ -1,0 +1,73 @@
+{
+  "general": {
+    "title": "Music Classes",
+    "description": "Learn classical and western instruments from expert instructors. We offer structured courses, flexible timings, and certified training in a professional environment.",
+    "location_title": "Classes Address",
+    "location_address": "104, Pawansut Building, Tanaji Nagar Road, Malad East, Mumbai - 97",
+    "contact_phones": [
+      "+91 85912 23874",
+      "+91 98213 60536"
+    ],
+    "enrolment_note": "To enrol in a class or schedule a free trial session, please contact us directly on WhatsApp or call our instructors."
+  },
+  "courses": [
+    {
+      "id": "tabla",
+      "name": "Tabla Classes",
+      "instructor": "Dinesh Pokle",
+      "duration": "2 classes per week",
+      "fee": "1500",
+      "fee_note": "Payable monthly at time of joining",
+      "schedule": [
+        "Mon & Thurs: 6:00 PM - 7:00 PM, 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM",
+        "Tues & Fri: 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM"
+      ]
+    },
+    {
+      "id": "dholak",
+      "name": "Dholak Classes",
+      "instructor": "Dinesh Pokle",
+      "duration": "2 classes per week",
+      "fee": "1500",
+      "fee_note": "Payable monthly at time of joining",
+      "schedule": [
+        "Mon & Thurs: 6:00 PM - 7:00 PM, 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM",
+        "Tues & Fri: 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM"
+      ]
+    },
+    {
+      "id": "dholki",
+      "name": "Dholki Classes",
+      "instructor": "Dinesh Pokle",
+      "duration": "2 classes per week",
+      "fee": "1500",
+      "fee_note": "Payable monthly at time of joining",
+      "schedule": [
+        "Mon & Thurs: 6:00 PM - 7:00 PM, 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM",
+        "Tues & Fri: 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM"
+      ]
+    },
+    {
+      "id": "harmonium",
+      "name": "Harmonium Classes",
+      "instructor": "Dinesh Pokle",
+      "duration": "2 classes per week",
+      "fee": "1500",
+      "fee_note": "Payable monthly at time of joining",
+      "schedule": [
+        "Wed & Sat: 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM"
+      ]
+    },
+    {
+      "id": "keyboard",
+      "name": "Keyboard Classes",
+      "instructor": "Dinesh Pokle",
+      "duration": "2 classes per week",
+      "fee": "2500",
+      "fee_note": "Special keyboard tuition fee",
+      "schedule": [
+        "Wed & Sat: 7:00 PM - 8:00 PM, 8:00 PM - 9:00 PM"
+      ]
+    }
+  ]
+}

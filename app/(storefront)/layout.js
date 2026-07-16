@@ -53,8 +53,11 @@ function StorefrontLayoutInner({ children }) {
             {/* Logo */}
             <div className="flex-shrink-0 flex items-center justify-center md:justify-start flex-1 md:flex-none mr-6">
               <Link href="/" className="flex flex-col items-center md:items-start group">
-                <span className="text-xl font-black tracking-tighter text-[#1C1212] group-hover:text-[#C5A028] transition-colors leading-none mb-1">
-                  Home
+                <span className="text-lg sm:text-xl font-black tracking-tighter text-[#1C1212] group-hover:text-[#C5A028] transition-colors leading-none mb-1">
+                  Saraswati Sangeet
+                </span>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#C5A028] leading-none">
+                  Vadhyalaya
                 </span>
               </Link>
             </div>
@@ -68,6 +71,10 @@ function StorefrontLayoutInner({ children }) {
               <Link href="/categories" className={`text-sm transition relative group ${pathname.startsWith('/categories') ? 'font-bold text-[#2C1F1F]' : 'font-semibold text-[#6E6262] hover:text-[#C5A028]'}`}>
                 {t('navCategories')}
                 <span className={`absolute -bottom-1 left-0 h-0.5 bg-[#C5A028] transition-all ${pathname.startsWith('/categories') ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
+              </Link>
+              <Link href="/classes" className={`text-sm transition relative group ${pathname.startsWith('/classes') ? 'font-bold text-[#2C1F1F]' : 'font-semibold text-[#6E6262] hover:text-[#C5A028]'}`}>
+                {t('navClasses') || 'Classes'}
+                <span className={`absolute -bottom-1 left-0 h-0.5 bg-[#C5A028] transition-all ${pathname.startsWith('/classes') ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
               </Link>
               <Link href="/repair" className={`text-sm transition relative group ${pathname.startsWith('/repair') ? 'font-bold text-[#2C1F1F]' : 'font-semibold text-[#6E6262] hover:text-[#C5A028]'}`}>
                 {t('navRepair')}
@@ -161,6 +168,7 @@ function StorefrontLayoutInner({ children }) {
             <div className="px-4 pt-2 pb-6 space-y-2">
               <Link href="/shop" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/shop') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>{t('navShop')}</Link>
               <Link href="/categories" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/categories') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>{t('navCategories')}</Link>
+              <Link href="/classes" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/classes') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>{t('navClasses') || 'Classes'}</Link>
               <Link href="/repair" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/repair') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>{t('navRepair')}</Link>
               <Link href="/track" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/track') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>Track Order</Link>
               <Link href="/account" onClick={() => setIsMobileMenuOpen(false)} className={`block px-3 py-3 text-base font-medium rounded-lg transition ${pathname.startsWith('/account') ? 'text-[#C5A028] bg-[#F5F2EB]' : 'text-[#6E6262] hover:bg-[#F5F2EB]'}`}>Account</Link>
@@ -214,14 +222,16 @@ function StorefrontLayoutInner({ children }) {
             </div>
 
             <div>
-              <h4 className="text-[#2C1F1F] font-semibold uppercase tracking-widest text-xs mb-6">{t('newsletterTitle')}</h4>
-              <p className="text-[#6E6262] text-sm leading-relaxed mb-4">{t('newsletterDesc')}</p>
-              <form onSubmit={(e) => { e.preventDefault(); alert("Thank you for subscribing to our newsletter!"); e.target.reset(); }} className="flex">
-                <input type="email" required placeholder={t('newsletterPlaceholder')} className="bg-white border border-[#E2DDD5] rounded-l-lg py-3 px-4 text-sm text-[#2C1F1F] placeholder-[#8C7E7E] focus:outline-none focus:border-[#C5A028] w-full" />
-                <button type="submit" className="bg-[#C5A028] hover:bg-[#A98920] text-white px-4 font-bold rounded-r-lg transition">
-                  {t('newsletterBtn')}
-                </button>
-              </form>
+              <h4 className="text-[#2C1F1F] font-semibold uppercase tracking-widest text-xs mb-6">Music Academy</h4>
+              <p className="text-[#6E6262] text-sm leading-relaxed mb-4">
+                Learn Tabla, Dholak, Harmonium, and Keyboard at our training center. Beginner-friendly batches open now!
+              </p>
+              <Link 
+                href="/classes"
+                className="inline-flex items-center gap-2 bg-[#C5A028] hover:bg-[#A98920] text-white px-5 py-2.5 font-bold text-xs uppercase tracking-wider rounded-xl transition shadow-sm"
+              >
+                Explore Classes
+              </Link>
             </div>
           </div>
           <div className="border-t border-[#EAE6DF] pt-8 flex flex-col md:flex-row items-center justify-between">
