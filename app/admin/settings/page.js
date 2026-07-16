@@ -17,6 +17,22 @@ export default function SettingsPage() {
     faqs: []
   });
 
+  // Dynamic Translations & General Editor State
+  const [dynamicTranslations, setDynamicTranslations] = useState({});
+  const [selectedTransLang, setSelectedTransLang] = useState('en');
+  const [generalSubTab, setGeneralSubTab] = useState('homepage');
+  const [transSearch, setTransSearch] = useState('');
+  
+  const handleTranslationChange = (langKey, transKey, value) => {
+    setDynamicTranslations(prev => ({
+      ...prev,
+      [langKey]: {
+        ...prev[langKey],
+        [transKey]: value
+      }
+    }));
+  };
+
   // Mock State
   const [theme, setTheme] = useState('dark');
   const [font, setFont] = useState('inter');
@@ -94,6 +110,14 @@ export default function SettingsPage() {
         if (data && !data.error) setStoreInfo(data);
       })
       .catch(err => console.error(err));
+
+    // Fetch dynamic translations
+    fetch('/api/translations')
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.error) setDynamicTranslations(data);
+      })
+      .catch(err => console.error(err));
   }, []);
 
   const handleSave = async () => {
@@ -111,6 +135,13 @@ export default function SettingsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(storeInfo)
+      });
+
+      // Save dynamic translations
+      await fetch('/api/translations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dynamicTranslations)
       });
 
       setIsSaving(false);
@@ -724,7 +755,276 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab !== 'appearance' && activeTab !== 'typography' && activeTab !== 'ai' && activeTab !== 'pages' && (
+          {activeTab === 'general' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* General Sub-Navigation */}
+              <div className="flex flex-wrap gap-2 border-b border-[#2C1E1E] pb-4">
+                {[
+                  { id: 'homepage', label: 'Homepage Content', icon: Monitor },
+                  { id: 'branding', label: 'Branding & Footer', icon: Globe },
+                  { id: 'dictionary', label: 'All Text Mappings', icon: LayoutTemplate }
+                ].map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => setGeneralSubTab(sub.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                      generalSubTab === sub.id
+                        ? 'bg-[#D4AF37] text-black font-bold'
+                        : 'bg-[#1C1212] border border-[#2C1E1E] text-[#A09393] hover:text-white'
+                    }`}
+                  >
+                    <sub.icon className="w-3.5 h-3.5" />
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Language Selector Dropdown (sticky across subtabs except raw translation) */}
+              {generalSubTab !== 'dictionary' && (
+                <div className="flex items-center justify-between bg-[#1C1212] border border-[#2C1E1E] rounded-xl p-4">
+                  <span className="text-xs text-[#A09393] font-semibold">Select language to translate/edit storefront texts:</span>
+                  <select
+                    value={selectedTransLang}
+                    onChange={(e) => setSelectedTransLang(e.target.value)}
+                    className="bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-[#D4AF37] font-bold focus:outline-none"
+                  >
+                    <option value="en">English (EN)</option>
+                    <option value="hi">Hindi (HI)</option>
+                    <option value="mr">Marathi (MR)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Homepage Content Subtab */}
+              {generalSubTab === 'homepage' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Hero Title (First Part)</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.heroTitleFirst || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'heroTitleFirst', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Hero Title (Second Part)</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.heroTitleSecond || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'heroTitleSecond', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Hero Description Section</label>
+                    <textarea
+                      rows={4}
+                      value={dynamicTranslations[selectedTransLang]?.heroDesc || ''}
+                      onChange={(e) => handleTranslationChange(selectedTransLang, 'heroDesc', e.target.value)}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Featured Products Title</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.justArrived || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'justArrived', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Featured Products Subtitle</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.newArrivals || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'newArrivals', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                  <div className="h-px bg-[#2C1E1E] w-full my-6"></div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Brand Promotion Box Title</label>
+                    <input
+                      type="text"
+                      value={dynamicTranslations[selectedTransLang]?.brandCtaTitle || ''}
+                      onChange={(e) => handleTranslationChange(selectedTransLang, 'brandCtaTitle', e.target.value)}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Brand Promotion Box Description</label>
+                    <textarea
+                      rows={3}
+                      value={dynamicTranslations[selectedTransLang]?.brandCtaDesc || ''}
+                      onChange={(e) => handleTranslationChange(selectedTransLang, 'brandCtaDesc', e.target.value)}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Explore Products Button</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.exploreProducts || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'exploreProducts', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Start Shopping Button</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.startShopping || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'startShopping', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Shop All Button</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.shopAll || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'shopAll', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Branding & Footer Subtab */}
+              {generalSubTab === 'branding' && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Header Top Promo Banner</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.promoBanner || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'promoBanner', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Search Input Placeholder</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.searchPlaceholder || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'searchPlaceholder', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[#A09393] text-xs font-bold uppercase tracking-wider mb-2">Copyright Tagline (Footer)</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.rightsReserved || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'rightsReserved', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[#A09393] text-xs font-bold uppercase tracking-wider mb-2">Established Text Label</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.since2026 || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'since2026', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                  <div className="h-px bg-[#2C1E1E] w-full my-6"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-[#A09393] text-xs font-bold uppercase tracking-wider mb-2">Newsletter Box Title</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.newsletterTitle || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'newsletterTitle', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[#A09393] text-xs font-bold uppercase tracking-wider mb-2">Newsletter Description</label>
+                      <input
+                        type="text"
+                        value={dynamicTranslations[selectedTransLang]?.newsletterDesc || ''}
+                        onChange={(e) => handleTranslationChange(selectedTransLang, 'newsletterDesc', e.target.value)}
+                        className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Store Address Text</label>
+                    <textarea
+                      rows={3}
+                      value={dynamicTranslations[selectedTransLang]?.addressText || ''}
+                      onChange={(e) => handleTranslationChange(selectedTransLang, 'addressText', e.target.value)}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Raw Mappings Subtab */}
+              {generalSubTab === 'dictionary' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-4">
+                      <span className="text-xs text-[#A09393] font-semibold">Editing Language:</span>
+                      <select
+                        value={selectedTransLang}
+                        onChange={(e) => setSelectedTransLang(e.target.value)}
+                        className="bg-[#1C1212] border border-[#2C1E1E] rounded-lg px-2.5 py-1.5 text-xs text-[#D4AF37] font-semibold focus:outline-none"
+                      >
+                        <option value="en">English (EN)</option>
+                        <option value="hi">Hindi (HI)</option>
+                        <option value="mr">Marathi (MR)</option>
+                      </select>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Search translation keys..."
+                      value={transSearch}
+                      onChange={(e) => setTransSearch(e.target.value)}
+                      className="bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#D4AF37] w-full sm:w-64 font-sans"
+                    />
+                  </div>
+
+                  <div className="space-y-4 max-h-[480px] overflow-y-auto pr-2 scrollbar-thin">
+                    {Object.keys(dynamicTranslations[selectedTransLang] || {})
+                      .filter((key) => key.toLowerCase().includes(transSearch.toLowerCase()) || (dynamicTranslations[selectedTransLang]?.[key] || '').toLowerCase().includes(transSearch.toLowerCase()))
+                      .map((key) => (
+                        <div key={key} className="p-4 rounded-xl border border-[#2C1E1E] bg-[#1C1212] grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                          <div className="md:col-span-1">
+                            <span className="font-mono text-xs font-bold text-[#A09393] block break-all">{key}</span>
+                          </div>
+                          <div className="md:col-span-2">
+                            <textarea
+                              rows={1}
+                              value={dynamicTranslations[selectedTransLang]?.[key] || ''}
+                              onChange={(e) => handleTranslationChange(selectedTransLang, key, e.target.value)}
+                              className="w-full bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37] resize-none"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'appearance' && activeTab !== 'typography' && activeTab !== 'ai' && activeTab !== 'pages' && activeTab !== 'general' && (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-50 animate-in fade-in">
               <LayoutTemplate className="w-12 h-12 text-[#5A4B4B] mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">Module Under Construction</h3>
