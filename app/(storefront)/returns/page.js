@@ -1,15 +1,31 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { ShieldAlert, ArrowLeftRight, HelpCircle } from 'lucide-react';
 
 export default function ReturnsPage() {
   const { t } = useLanguage();
+  const [returnsData, setReturnsData] = useState({
+    returns_policy: "At Saraswati Sangeet Vadhyalaya, we specialize in selling handmade, custom-checked musical instruments. Because of the traditional craftsmanship involved, we follow a strict **No Returns** and **No Refunds** policy. We encourage all customers to double-check their specs, scale choices, and selections before placing an order.",
+    exchange_policy: "Exchanges are only available under certain highly specific circumstances. If you believe your order qualifies or you want to request an exchange, you **must contact us directly** to discuss the case. The final decision rests entirely with the store management.",
+    warranty_policy: "We do not provide standard commercial warranties on handmade percussion instruments. However, if your instrument arrives with transport damage or a severe structural defect, please **inform us immediately** (within 24 hours of delivery). We will inspect the case; repair charges may apply depending on the circumstances."
+  });
+
+  useEffect(() => {
+    fetch('/api/store-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.returns) {
+          setReturnsData(data.returns);
+        }
+      })
+      .catch(err => console.error("Failed to load returns details:", err));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 min-h-[70vh]">
-      <h1 className="text-4xl font-extrabold tracking-tighter text-white mb-8">Returns & Exchanges</h1>
+      <h1 className="text-4xl font-extrabold tracking-tighter text-[#2C1F1F] mb-8">Returns & Exchanges</h1>
       
       <div className="bg-white border border-[#E2DDD5] rounded-3xl p-8 md:p-12 shadow-sm space-y-8 text-[#6E6262] text-sm leading-relaxed">
         
@@ -19,27 +35,27 @@ export default function ReturnsPage() {
             <h2 className="text-xl font-bold text-[#2C1F1F]">No Returns & No Refunds</h2>
           </div>
           <p>
-            At Saraswati Sangeet Vadhyalaya, we specialize in selling handmade, custom-checked musical instruments. Because of the traditional craftsmanship involved, we follow a strict **No Returns** and **No Refunds** policy. We encourage all customers to double-check their specs, scale choices, and selections before placing an order.
+            {returnsData.returns_policy}
           </p>
         </section>
-
+ 
         <section className="space-y-3">
           <div className="flex items-center gap-2 text-[#C5A028]">
             <ArrowLeftRight className="w-5 h-5" />
             <h2 className="text-xl font-bold text-[#2C1F1F]">Exchange Policy</h2>
           </div>
           <p>
-            Exchanges are only available under certain highly specific circumstances. If you believe your order qualifies or you want to request an exchange, you **must contact us directly** to discuss the case. The final decision rests entirely with the store management.
+            {returnsData.exchange_policy}
           </p>
         </section>
-
+ 
         <section className="space-y-3">
           <div className="flex items-center gap-2 text-[#C5A028]">
             <ShieldAlert className="w-5 h-5" />
             <h2 className="text-xl font-bold text-[#2C1F1F]">No Standard Warranty & Damaged Goods</h2>
           </div>
           <p>
-            We do not provide standard commercial warranties on handmade percussion instruments. However, if your instrument arrives with transport damage or a severe structural defect, please **inform us immediately** (within 24 hours of delivery). We will inspect the case; repair charges may apply depending on the circumstances.
+            {returnsData.warranty_policy}
           </p>
         </section>
 

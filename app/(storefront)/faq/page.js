@@ -1,12 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export default function FAQPage() {
   const { t } = useLanguage();
-
-  const faqs = [
+  const [faqs, setFaqs] = useState([
     {
       q: "Where is the store located?",
       a: "Saraswati Sangeet Vadhyalaya is located at Nalanda Building, Kurar Village, Malad East, Mumbai. We invite you to visit our workshop."
@@ -27,7 +26,18 @@ export default function FAQPage() {
       q: "Do you ship internationally?",
       a: "Currently, we focus on serving our local musical community in Mumbai and across India. However, for specialized custom orders, contact us directly and we can discuss shipping arrangements."
     }
-  ];
+  ]);
+
+  useEffect(() => {
+    fetch('/api/store-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.faqs) {
+          setFaqs(data.faqs);
+        }
+      })
+      .catch(err => console.error("Failed to load FAQs:", err));
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 min-h-[70vh]">

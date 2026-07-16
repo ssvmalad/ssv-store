@@ -1,0 +1,44 @@
+{
+  "about": {
+    "estd": "2003",
+    "who_we_are": "Saraswati Sangeet Vadhyalaya is a musical instrument store and repair workshop based in Ambevadi , Kurar Village, Malad East, Mumbai. We are dedicated to providing standard and custom instruments at reasonable rates and perform repairing tasks.",
+    "services": "Whether you need to purchase custom-ordered classical instrument or require precise repair work of instruments such as Drums ,Guitar ,Dholak etc, we provide it . From Tabla skin replacement and Guitar tuning to Harmonium air bellows restoration, Guitar fret alignment, and Keyboard cleanup and restoration every aspect is taken care of.",
+    "motive": "We believe in customizing according to our customers needs and playing. Every instrument sold is checked by us, and all repair works are done manually . We promise precision you can hear and craftsmanship you can trust."
+  },
+  "shipping": {
+    "steps": [
+      { "title": "1. Add & Checkout", "desc": "Add instruments to your cart and click checkout. It redirects you to WhatsApp with your order details pre-filled." },
+      { "title": "2. Confirm Shipping & Pay", "desc": "We verify the instrument in stock and estimate shipping costs based on weight and your address, then share UPI payment details." },
+      { "title": "3. Premium Packing", "desc": "All instruments are packed with thick foam cushions, bubble wrap, and cardboard/wood boxes to avoid any damage in transit." },
+      { "title": "4. Safe Delivery", "desc": "We dispatch your items via trusted shipping partners (DTDC, Professional Courier) or arrange fast local delivery within Mumbai." }
+    ],
+    "damage_protection": "Musical instruments are fragile. We guarantee robust packaging. If any instrument reaches you damaged in transit, we will replace or repair it immediately."
+  },
+  "returns": {
+    "returns_policy": "At Saraswati Sangeet Vadhyalaya, we specialize in selling handmade, custom-checked musical instruments. Because of the traditional craftsmanship involved, we follow a strict **No Returns** and **No Refunds** policy. We encourage all customers to double-check their specs, scale choices, and selections before placing an order.",
+    "exchange_policy": "Exchanges are only available under certain highly specific circumstances. If you believe your order qualifies or you want to request an exchange, you **must contact us directly** to discuss the case. The final decision rests entirely with the store management.",
+    "warranty_policy": "We do not provide standard commercial warranties on handmade percussion instruments. However, if your instrument arrives with transport damage or a severe structural defect, please **inform us immediately** (within 24 hours of delivery). We will inspect the case; repair charges may apply depending on the circumstances."
+  },
+  "faqs": [
+    {
+      "q": "Where is the store located?",
+      "a": "Saraswati Sangeet Vadhyalaya is located at Nalanda Building, Kurar Village, Malad East, Mumbai. We invite you to visit our workshop."
+    },
+    {
+      "q": "Do you repair all types of instruments?",
+      "a": "We specialize in classical Indian instruments like Tabla, Harmonium, Sitar, as well as western instruments like Guitars and Keyboards. From skin replacement to electronic contact cleaning, we do it all."
+    },
+    {
+      "q": "Can I place a custom order?",
+      "a": "Yes! We build and tune custom instruments to your specific requirements. Please contact us via WhatsApp to discuss materials, tuning scales, and design."
+    },
+    {
+      "q": "How does the checkout process work?",
+      "a": "Since many of our instruments require specific tuning or consultation, we process our orders via WhatsApp. Build your cart on our website, proceed to checkout, and it will send a pre-formatted message to our team to confirm availability and finalize the sale."
+    },
+    {
+      "q": "Do you ship internationally?",
+      "a": "Currently, we focus on serving our local musical community in Mumbai and across India. However, for specialized custom orders, contact us directly and we can discuss shipping arrangements."
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, Phone, Clock, Send, MessageCircle, Sparkles, Share2 } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -8,6 +8,23 @@ export default function ContactPage() {
   const { t } = useLanguage();
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
+  const [aboutData, setAboutData] = useState({
+    estd: "2003",
+    who_we_are: "Saraswati Sangeet Vadhyalaya is a musical instrument store and repair workshop based in Ambevadi , Kurar Village, Malad East, Mumbai. We are dedicated to providing standard and custom instruments at reasonable rates and perform repairing tasks.",
+    services: "Whether you need to purchase custom-ordered classical instrument or require precise repair work of instruments such as Drums ,Guitar ,Dholak etc, we provide it . From Tabla skin replacement and Guitar tuning to Harmonium air bellows restoration, Guitar fret alignment, and Keyboard cleanup and restoration every aspect is taken care of.",
+    motive: "We believe in customizing according to our customers needs and playing. Every instrument sold is checked by us, and all repair works are done manually . We promise precision you can hear and craftsmanship you can trust."
+  });
+
+  useEffect(() => {
+    fetch('/api/store-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.about) {
+          setAboutData(data.about);
+        }
+      })
+      .catch(err => console.error("Failed to load about details:", err));
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -57,26 +74,26 @@ export default function ContactPage() {
               <p className="text-xs text-[#D4AF37] font-bold uppercase tracking-wider mt-1">Established in Malad East, Mumbai</p>
             </div>
             <span className="px-4 py-2 rounded-xl bg-white/10 border border-white/10 text-xs font-semibold text-white/90 self-start md:self-auto shrink-0 font-mono">
-              ESTD. 2003
+              ESTD. {aboutData.estd}
             </span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-white/80 text-sm leading-relaxed">
             <div className="space-y-3">
               <h3 className="font-bold text-white text-base">Who We Are</h3>
               <p>
-                Saraswati Sangeet Vadhyalaya is a musical instrument store and repair workshop based in Ambevadi , Kurar Village, Malad East, Mumbai. We are dedicated to providing standard and custom instruments at reasonable rates and perform repairing tasks.
+                {aboutData.who_we_are}
               </p>
             </div>
             <div className="space-y-3">
               <h3 className="font-bold text-white text-base">Custom Made and Repair Services</h3>
               <p>
-                Whether you need to purchase custom-ordered classical instrument or require precise repair work of instruments such as Drums ,Guitar ,Dholak etc, we provide it . From Tabla skin replacement and Guitar tuning to Harmonium air bellows restoration, Guitar fret alignment, and Keyboard cleanup and restoration every aspect is taken care of.
+                {aboutData.services}
               </p>
             </div>
             <div className="space-y-3">
               <h3 className="font-bold text-white text-base">Our Musical Motive</h3>
               <p>
-                We believe in customizing according to our customers needs and playing. Every instrument sold is checked by us, and all repair works are done manually . We promise precision you can hear and craftsmanship you can trust.
+                {aboutData.motive}
               </p>
             </div>
           </div>

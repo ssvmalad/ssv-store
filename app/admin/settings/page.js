@@ -1,12 +1,21 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Palette, Type, LayoutTemplate, Monitor, Moon, Sun, Smartphone, Globe, Bell, Save, CheckCircle2, Bot, Plus, Trash2, Send, Loader2 } from 'lucide-react';
+import { Palette, Type, LayoutTemplate, Monitor, Moon, Sun, Smartphone, Globe, Bell, Save, CheckCircle2, Bot, Plus, Trash2, Send, Loader2, HelpCircle, Info, ArrowUp, ArrowDown, BookOpen, Truck, ShieldCheck } from 'lucide-react';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('appearance');
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Store Pages State
+  const [pagesSubTab, setPagesSubTab] = useState('about');
+  const [storeInfo, setStoreInfo] = useState({
+    about: { estd: '2003', who_we_are: '', services: '', motive: '' },
+    shipping: { steps: [], damage_protection: '' },
+    returns: { returns_policy: '', exchange_policy: '', warranty_policy: '' },
+    faqs: []
+  });
 
   // Mock State
   const [theme, setTheme] = useState('dark');
@@ -70,29 +79,47 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
+    // Fetch AI rules
     fetch('/api/admin/ai-instructions')
       .then(res => res.json())
       .then(data => {
         if (data.rules) setAiRules(data.rules);
       })
       .catch(err => console.error(err));
+
+    // Fetch Store Info
+    fetch('/api/store-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.error) setStoreInfo(data);
+      })
+      .catch(err => console.error(err));
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    
-    fetch('/api/admin/ai-instructions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rules: aiRules })
-    }).then(() => {
+    try {
+      // Save AI rules
+      await fetch('/api/admin/ai-instructions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rules: aiRules })
+      });
+
+      // Save Store Info Pages
+      await fetch('/api/store-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(storeInfo)
+      });
+
       setIsSaving(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    }).catch(err => {
+    } catch (err) {
       console.error(err);
       setIsSaving(false);
-    });
+    }
   };
 
   const tabs = [
@@ -100,6 +127,7 @@ export default function SettingsPage() {
     { id: 'typography', label: 'Typography & Fonts', icon: Type },
     { id: 'layout', label: 'Store Layout', icon: LayoutTemplate },
     { id: 'general', label: 'General Info', icon: Globe },
+    { id: 'pages', label: 'Store Pages', icon: BookOpen },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'ai', label: 'AI Assistant', icon: Bot },
   ];
@@ -404,7 +432,299 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab !== 'appearance' && activeTab !== 'typography' && activeTab !== 'ai' && (
+          {activeTab === 'pages' && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Pages Sub-Navigation */}
+              <div className="flex flex-wrap gap-2 border-b border-[#2C1E1E] pb-4">
+                {[
+                  { id: 'about', label: 'About Page', icon: Info },
+                  { id: 'shipping', label: 'Shipping & Delivery', icon: Truck },
+                  { id: 'returns', label: 'Returns & Exchange', icon: ShieldCheck },
+                  { id: 'faqs', label: 'FAQs List', icon: HelpCircle }
+                ].map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => setPagesSubTab(sub.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                      pagesSubTab === sub.id
+                        ? 'bg-[#D4AF37] text-black font-bold'
+                        : 'bg-[#1C1212] border border-[#2C1E1E] text-[#A09393] hover:text-white'
+                    }`}
+                  >
+                    <sub.icon className="w-3.5 h-3.5" />
+                    {sub.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* About sub-tab content */}
+              {pagesSubTab === 'about' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Year Established</label>
+                    <input
+                      type="text"
+                      value={storeInfo.about?.estd || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        about: { ...storeInfo.about, estd: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Who We Are</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.about?.who_we_are || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        about: { ...storeInfo.about, who_we_are: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Custom Ordering & Repair Services</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.about?.services || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        about: { ...storeInfo.about, services: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Our Musical Motive</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.about?.motive || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        about: { ...storeInfo.about, motive: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Shipping & Delivery Sub-tab */}
+              {pagesSubTab === 'shipping' && (
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-[#2C1E1E] pb-2">Step-by-Step Delivery Process</h4>
+                    <div className="space-y-4">
+                      {(storeInfo.shipping?.steps || []).map((step, idx) => (
+                        <div key={idx} className="p-4 rounded-xl border border-[#2C1E1E] bg-[#1C1212] space-y-3">
+                          <div className="font-semibold text-[#D4AF37] text-xs uppercase tracking-wider font-mono">Step {idx + 1}</div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="md:col-span-1">
+                              <label className="block text-[10px] font-bold text-[#5A4B4B] uppercase tracking-wider mb-1">Step Title</label>
+                              <input
+                                type="text"
+                                value={step.title || ''}
+                                onChange={(e) => {
+                                  const updatedSteps = [...storeInfo.shipping.steps];
+                                  updatedSteps[idx] = { ...step, title: e.target.value };
+                                  setStoreInfo({
+                                    ...storeInfo,
+                                    shipping: { ...storeInfo.shipping, steps: updatedSteps }
+                                  });
+                                }}
+                                className="w-full bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                              />
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="block text-[10px] font-bold text-[#5A4B4B] uppercase tracking-wider mb-1">Step Description</label>
+                              <input
+                                type="text"
+                                value={step.desc || ''}
+                                onChange={(e) => {
+                                  const updatedSteps = [...storeInfo.shipping.steps];
+                                  updatedSteps[idx] = { ...step, desc: e.target.value };
+                                  setStoreInfo({
+                                    ...storeInfo,
+                                    shipping: { ...storeInfo.shipping, steps: updatedSteps }
+                                  });
+                                }}
+                                className="w-full bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Transit Damage Protection Details</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.shipping?.damage_protection || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        shipping: { ...storeInfo.shipping, damage_protection: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Returns & Exchanges sub-tab */}
+              {pagesSubTab === 'returns' && (
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">No Returns & No Refunds Policy</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.returns?.returns_policy || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        returns: { ...storeInfo.returns, returns_policy: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Exchange Policy Details</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.returns?.exchange_policy || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        returns: { ...storeInfo.returns, exchange_policy: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#A09393] uppercase tracking-wider mb-2">Warranty & Transport Damage Details</label>
+                    <textarea
+                      rows={4}
+                      value={storeInfo.returns?.warranty_policy || ''}
+                      onChange={(e) => setStoreInfo({
+                        ...storeInfo,
+                        returns: { ...storeInfo.returns, warranty_policy: e.target.value }
+                      })}
+                      className="w-full bg-[#1C1212] border border-[#2C1E1E] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#D4AF37]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* FAQs Catalog sub-tab */}
+              {pagesSubTab === 'faqs' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="text-sm font-bold text-white uppercase tracking-wider">Frequently Asked Questions Catalog</h4>
+                    <button
+                      type="button"
+                      onClick={() => setStoreInfo({
+                        ...storeInfo,
+                        faqs: [...(storeInfo.faqs || []), { q: 'New Question?', a: 'New Answer Details.' }]
+                      })}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 border border-[#D4AF37]/20 rounded-lg text-xs font-bold transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add New FAQ
+                    </button>
+                  </div>
+
+                  <div className="space-y-4 max-h-[480px] overflow-y-auto pr-2 scrollbar-thin">
+                    {(storeInfo.faqs || []).map((faq, idx) => (
+                      <div key={idx} className="p-4 rounded-xl border border-[#2C1E1E] bg-[#1C1212] space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-[#D4AF37] text-xs uppercase tracking-wider font-mono">FAQ #{idx + 1}</span>
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={idx === 0}
+                              onClick={() => {
+                                const newFaqs = [...storeInfo.faqs];
+                                const temp = newFaqs[idx];
+                                newFaqs[idx] = newFaqs[idx - 1];
+                                newFaqs[idx - 1] = temp;
+                                setStoreInfo({ ...storeInfo, faqs: newFaqs });
+                              }}
+                              className="p-1 bg-[#0F0A0A] hover:bg-[#2C1E1E] text-[#A09393] hover:text-white rounded border border-[#2C1E1E] transition disabled:opacity-30 disabled:pointer-events-none"
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={idx === storeInfo.faqs.length - 1}
+                              onClick={() => {
+                                const newFaqs = [...storeInfo.faqs];
+                                const temp = newFaqs[idx];
+                                newFaqs[idx] = newFaqs[idx + 1];
+                                newFaqs[idx + 1] = temp;
+                                setStoreInfo({ ...storeInfo, faqs: newFaqs });
+                              }}
+                              className="p-1 bg-[#0F0A0A] hover:bg-[#2C1E1E] text-[#A09393] hover:text-white rounded border border-[#2C1E1E] transition disabled:opacity-30 disabled:pointer-events-none"
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (confirm("Delete this FAQ item?")) {
+                                  const newFaqs = storeInfo.faqs.filter((_, i) => i !== idx);
+                                  setStoreInfo({ ...storeInfo, faqs: newFaqs });
+                                }
+                              }}
+                              className="p-1 bg-red-950/20 hover:bg-red-500/20 text-rose-300 rounded border border-rose-950/30 transition ml-2"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-[10px] font-bold text-[#5A4B4B] uppercase tracking-wider mb-1">Question</label>
+                            <input
+                              type="text"
+                              value={faq.q || ''}
+                              onChange={(e) => {
+                                const newFaqs = [...storeInfo.faqs];
+                                newFaqs[idx] = { ...faq, q: e.target.value };
+                                setStoreInfo({ ...storeInfo, faqs: newFaqs });
+                              }}
+                              className="w-full bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-bold text-[#5A4B4B] uppercase tracking-wider mb-1">Answer</label>
+                            <textarea
+                              rows={2}
+                              value={faq.a || ''}
+                              onChange={(e) => {
+                                const newFaqs = [...storeInfo.faqs];
+                                newFaqs[idx] = { ...faq, a: e.target.value };
+                                setStoreInfo({ ...storeInfo, faqs: newFaqs });
+                              }}
+                              className="w-full bg-[#0F0A0A] border border-[#2C1E1E] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-[#D4AF37]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {(!storeInfo.faqs || storeInfo.faqs.length === 0) && (
+                      <div className="text-center p-8 border border-dashed border-[#2C1E1E] rounded-xl text-[#A09393] text-sm">
+                        No FAQs added yet. Click "Add New FAQ" to start.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== 'appearance' && activeTab !== 'typography' && activeTab !== 'ai' && activeTab !== 'pages' && (
             <div className="h-full flex flex-col items-center justify-center text-center opacity-50 animate-in fade-in">
               <LayoutTemplate className="w-12 h-12 text-[#5A4B4B] mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">Module Under Construction</h3>

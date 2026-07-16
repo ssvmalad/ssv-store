@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Package, Truck, Compass, CheckCircle2, Search, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
@@ -9,6 +9,26 @@ export default function ShippingDeliveryPage() {
   const [orderId, setOrderId] = useState('');
   const [trackingData, setTrackingData] = useState(null);
   const [searched, setSearched] = useState(false);
+  const [shippingData, setShippingData] = useState({
+    steps: [
+      { title: '1. Add & Checkout', desc: 'Add instruments to your cart and click checkout. It redirects you to WhatsApp with your order details pre-filled.' },
+      { title: '2. Confirm Shipping & Pay', desc: 'We verify the instrument in stock and estimate shipping costs based on weight and your address, then share UPI payment details.' },
+      { title: '3. Premium Packing', desc: 'All instruments are packed with thick foam cushions, bubble wrap, and cardboard/wood boxes to avoid any damage in transit.' },
+      { title: '4. Safe Delivery', desc: 'We dispatch your items via trusted shipping partners (DTDC, Professional Courier) or arrange fast local delivery within Mumbai.' }
+    ],
+    damage_protection: "Musical instruments are fragile. We guarantee robust packaging. If any instrument reaches you damaged in transit, we will replace or repair it immediately."
+  });
+
+  useEffect(() => {
+    fetch('/api/store-info')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.shipping) {
+          setShippingData(data.shipping);
+        }
+      })
+      .catch(err => console.error("Failed to load shipping details:", err));
+  }, []);
 
   const handleTrack = (e) => {
     e.preventDefault();
@@ -35,12 +55,7 @@ export default function ShippingDeliveryPage() {
     }
   };
 
-  const stepsList = [
-    { title: '1. Add & Checkout', desc: 'Add instruments to your cart and click checkout. It redirects you to WhatsApp with your order details pre-filled.' },
-    { title: '2. Confirm Shipping & Pay', desc: 'We verify the instrument in stock and estimate shipping costs based on weight and your address, then share UPI payment details.' },
-    { title: '3. Premium Packing', desc: 'All instruments are packed with thick foam cushions, bubble wrap, and cardboard/wood boxes to avoid any damage in transit.' },
-    { title: '4. Safe Delivery', desc: 'We dispatch your items via trusted shipping partners (DTDC, Professional Courier) or arrange fast local delivery within Mumbai.' }
-  ];
+  const stepsList = shippingData.steps;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-[#FDFCF7]">
@@ -87,7 +102,7 @@ export default function ShippingDeliveryPage() {
             <div>
               <h4 className="font-bold text-[#2C1F1F] mb-1">Transit Damage Protection</h4>
               <p className="text-sm text-[#6E6262] leading-relaxed">
-                Musical instruments are fragile. We guarantee robust packaging. If any instrument reaches you damaged in transit, we will replace or repair it immediately.
+                {shippingData.damage_protection}
               </p>
             </div>
           </div>
